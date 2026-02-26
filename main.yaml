@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ARR Root - Deploys network, security, iam, alb, compute as nested stacks
+
+Parameters:
+  NetworkTemplateURL:
+    Type: String
+  SecurityTemplateURL:
+    Type: String
+  IAMTemplateURL:
+    Type: String
+  ALBTemplateURL:
+    Type: String
+  ASGTemplateURL:
+    Type: String
+  CertificateArn:
+    Type: String
+    Default: arn:aws:acm:us-east-1:843553758024:certificate/8c470956-6728-4f7e-bc59-fa1072d6f925
+  HostedZoneId:
+    Type: String
+    Default: Z00414272K7YBCYJ3PEG4
+  RecordName:
+    Type: String
+    Default: arr.homenub.com
+
+  BucketName:
+    Type: String
+    Default: arr-bucket12398
+
+  RedHostHeader:
+    Type: String
+    Default: red.homenub.com
+  BlueHostHeader:
+    Type: String
+    Default: blue.homenub.com
+
+Resources:
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref NetworkTemplateURL
+
+  SecurityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref SecurityTemplateURL
+      Parameters:
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref IAMTemplateURL
+      Parameters:
+        BucketName: !Ref BucketName
+
+  ALBStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - NetworkStack
+      - SecurityStack
+    Properties:
+      TemplateURL: !Ref ALBTemplateURL
+      Parameters:
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+        PublicSubnetA: !GetAtt NetworkStack.Outputs.PublicSubnetA
+        PublicSubnetB: !GetAtt NetworkStack.Outputs.PublicSubnetB
+        ALBSecurityGroup: !GetAtt SecurityStack.Outputs.ALBSG
+        CertificateArn: !Ref CertificateArn
+        HostedZoneId: !Ref HostedZoneId
+        RecordName: !Ref RecordName
+        RedHostHeader: !Ref RedHostHeader
+        BlueHostHeader: !Ref BlueHostHeader
+
+  ComputeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - ALBStack
+      - IAMStack
+    Properties:
+      TemplateURL: !Ref ASGTemplateURL
+      Parameters:
+        PrivateSubnetA: !GetAtt NetworkStack.Outputs.PrivateSubnetA
+        PrivateSubnetB: !GetAtt NetworkStack.Outputs.PrivateSubnetB
+        EC2SecurityGroup: !GetAtt SecurityStack.Outputs.EC2SG
+        InstanceProfileName: !GetAtt IAMStack.Outputs.InstanceProfileName
+        RedTargetGroupArn: !GetAtt ALBStack.Outputs.RedTargetGroupArn
+        BlueTargetGroupArn: !GetAtt ALBStack.Outputs.BlueTargetGroupArn
+        BucketName: !Ref BucketName
+
+Outputs:
+  LoadBalancerDNS:
+    Description: ALB DNS name
+    Value: !GetAtt ALBStack.Outputs.LoadBalancerDNS

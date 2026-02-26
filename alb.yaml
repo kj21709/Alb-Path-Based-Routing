@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ARR ALB - HTTPS with ACM, HTTP->HTTPS redirect, host+path routing, Route53 alias
+
+Parameters:
+  VpcId:
+    Type: String
+
+  PublicSubnetA:
+    Type: String
+
+  PublicSubnetB:
+    Type: String
+
+  ALBSecurityGroup:
+    Type: String
+
+  # HTTPS
+  CertificateArn:
+    Type: String
+    Description: ACM certificate ARN in the same region as this ALB
+
+  # Route53
+  HostedZoneId:
+    Type: String
+    Description: Route53 Hosted Zone ID for homenub.com
+
+  RecordName:
+    Type: String
+    Description: DNS record to create (e.g., arr.homenub.com)
+
+  RedHostHeader:
+    Type: String
+    Default: red.homenub.com
+
+  BlueHostHeader:
+    Type: String
+    Default: blue.homenub.com
+
+Resources:
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: arr-alb
+      Scheme: internet-facing
+      Type: application
+      Subnets:
+        - !Ref PublicSubnetA
+        - !Ref PublicSubnetB
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+
+  # --- Target Groups ---
+  RedTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: red-tg
+      VpcId: !Ref VpcId
+      Protocol: HTTP
+      Port: 80
+      TargetType: instance
+      HealthCheckEnabled: true
+      HealthCheckPath: /red/index.html
+      Matcher:
+        HttpCode: 200
+
+  BlueTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: blue-tg
+      VpcId: !Ref VpcId
+      Protocol: HTTP
+      Port: 80
+      TargetType: instance
+      HealthCheckEnabled: true
+      HealthCheckPath: /blue/index.html
+      Matcher:
+        HttpCode: 200
+
+  # --- HTTP listener redirects to HTTPS ---
+  HttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: redirect
+          RedirectConfig:
+            Protocol: HTTPS
+            Port: '443'
+            StatusCode: HTTP_301
+
+  # --- HTTPS listener terminates TLS, forwards to Blue by default ---
+  HttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref CertificateArn
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref BlueTargetGroup
+
+  # Rules live on the HTTPS listener
+  # Priority plan:
+  # 1) Red path
+  # 2) Red host
+  # 3) Blue path
+  # 4) Blue host
+
+  RedPathRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HttpsListener
+      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          Values: ["/red*"]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref RedTargetGroup
+
+  RedHostRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HttpsListener
+      Priority: 2
+      Conditions:
+        - Field: host-header
+          Values: [!Ref RedHostHeader]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref RedTargetGroup
+
+  BluePathRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HttpsListener
+      Priority: 3
+      Conditions:
+        - Field: path-pattern
+          Values: ["/blue*"]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref BlueTargetGroup
+
+  BlueHostRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HttpsListener
+      Priority: 4
+      Conditions:
+        - Field: host-header
+          Values: [!Ref BlueHostHeader]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref BlueTargetGroup
+
+  # --- Route53 Alias Record -> ALB ---
+  AppDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref RecordName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ApplicationLoadBalancer.DNSName
+        HostedZoneId: !GetAtt ApplicationLoadBalancer.CanonicalHostedZoneID
+
+Outputs:
+  LoadBalancerDNS:
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+
+  RecordFQDN:
+    Value: !Ref RecordName
+
+  RedTargetGroupArn:
+    Value: !Ref RedTargetGroup
+
+  BlueTargetGroupArn:
+    Value: !Ref BlueTargetGroup

@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ARR IAM - EC2 role + policy for S3 objects + instance profile
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: arr-bucket12398
+
+Resources:
+  S3ARRRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: S3-ARR-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+
+  S3ARRPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: S3-ARR-policy
+      Roles:
+        - !Ref S3ARRRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource: !Sub arn:aws:s3:::${BucketName}/*
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref S3ARRRole
+
+Outputs:
+  InstanceProfileName:
+    Value: !Ref InstanceProfile
