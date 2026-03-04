@@ -1,10 +1,11 @@
 # Advanced Request Routing with ALB (Host & Path Based) + Auto Scaling
 
+This project demonstrates the deployment and hosting of a static website on S3, leveraging various resources on AWS to implement security, high availability and scalability. 
+
 ## Overview
 
-This project demonstrates a production style AWS architecture that
-implements:
-
+The following resources are used to setup this environment:
+-   Virtual Private Cloud
 -   Application Load Balancer (ALB)
 -   Host based routing
 -   Path based routing
@@ -15,6 +16,7 @@ implements:
 -   Multi-AZ deployment
 -   Infrastructure as Code using CloudFormation (nested stacks)
 
+![Architecture Diagram](images/Path%20Based%20Routing%20Diagram.png)
 ------------------------------------------------------------------------
 
 ## Auto Scaling Validation
