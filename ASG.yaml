@@ -19,7 +19,17 @@ Parameters:
 
   RedTargetGroupArn:
     Type: String
+
   BlueTargetGroupArn:
+    Type: String
+
+  ALBFullName:
+    Type: String
+
+  RedTargetGroupFullName:
+    Type: String
+
+  BlueTargetGroupFullName:
     Type: String
 
   BucketName:
@@ -280,3 +290,49 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref BlueLaunchTemplate
         Version: !GetAtt BlueLaunchTemplate.LatestVersionNumber
+
+# -------------------------------
+# Target Tracking Scaling Policies
+# Will scale out if the average request count per target exceeds 50 for either ASG. 
+# Will scale in if the metric falls below the target value. 
+# Scale in is not disabled, but instances will have a 5 minute warmup period 
+# to allow them to register healthy with the ALB and start serving traffic before being evaluated by the scaling policy.
+# -------------------------------
+
+  RedTargetTrackingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    DependsOn: 
+      - RedASG
+    Properties:
+      AutoScalingGroupName: !Ref RedASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ALBRequestCountPerTarget
+          ResourceLabel: !Join
+            - "/"
+            - - !Ref ALBFullName
+              - !Ref RedTargetGroupFullName
+        TargetValue: 50
+        DisableScaleIn: false
+        
+
+  BlueTargetTrackingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    DependsOn: 
+      - BlueASG
+    Properties:
+      AutoScalingGroupName: !Ref BlueASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ALBRequestCountPerTarget
+          ResourceLabel: !Join
+            - "/"
+            - - !Ref ALBFullName
+              - !Ref BlueTargetGroupFullName
+        TargetValue: 50
+        DisableScaleIn: false
+        

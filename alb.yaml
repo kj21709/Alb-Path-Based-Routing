@@ -26,13 +26,21 @@ Parameters:
 
   RecordName:
     Type: String
-    Description: DNS record to create (e.g., arr.homenub.com)
+    Description: DNS record to create
 
   RedHostHeader:
     Type: String
     Default: red.homenub.com
 
   BlueHostHeader:
+    Type: String
+    Default: blue.homenub.com
+  
+  RedRecordName:
+    Type: String
+    Default: red.homenub.com
+
+  BlueRecordName:
     Type: String
     Default: blue.homenub.com
 
@@ -160,12 +168,32 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref BlueTargetGroup
 
-  # --- Route53 Alias Record -> ALB ---
+  # --- Route53 Alias Record -> Host routes to ALB
   AppDnsRecord:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref HostedZoneId
       Name: !Ref RecordName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ApplicationLoadBalancer.DNSName
+        HostedZoneId: !GetAtt ApplicationLoadBalancer.CanonicalHostedZoneID
+
+  RedDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref RedRecordName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ApplicationLoadBalancer.DNSName
+        HostedZoneId: !GetAtt ApplicationLoadBalancer.CanonicalHostedZoneID
+
+  BlueDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref BlueRecordName
       Type: A
       AliasTarget:
         DNSName: !GetAtt ApplicationLoadBalancer.DNSName
@@ -183,3 +211,15 @@ Outputs:
 
   BlueTargetGroupArn:
     Value: !Ref BlueTargetGroup
+
+  ALBFullName:
+    Description: Full name of ALB (required for target tracking scaling)
+    Value: !GetAtt ApplicationLoadBalancer.LoadBalancerFullName
+
+  RedTargetGroupFullName:
+    Description: Full name of Red target group
+    Value: !GetAtt RedTargetGroup.TargetGroupFullName
+
+  BlueTargetGroupFullName:
+    Description: Full name of Blue target group
+    Value: !GetAtt BlueTargetGroup.TargetGroupFullName
