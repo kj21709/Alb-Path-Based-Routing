@@ -2,15 +2,15 @@
 
 ## Overview
 
-This project demonstrates a production style AWS architecture that
+This project demonstrates a production-style AWS architecture that
 implements:
 
 -   Application Load Balancer (ALB)
--   Host based routing
--   Path based routing
+-   Host-based routing
+-   Path-based routing
 -   Auto Scaling with Target Tracking policies
 -   Route 53 DNS integration
--   ACM managed HTTPS
+-   ACM-managed HTTPS
 -   Private subnets for compute
 -   Multi-AZ deployment
 -   Infrastructure as Code using CloudFormation (nested stacks)
@@ -28,9 +28,6 @@ Each Auto Scaling Group uses:
 -   Max: 3
 
 Sustained load was generated to trigger scaling events.
-
-for i in {1..1000}; do
-  curl -sk -o /dev/null -w "%{http_code}\n" https://red.homenub.com/red/index.html
 
 ### Scaling Activity Evidence
 
@@ -116,5 +113,5 @@ This environment demonstrates:
 -   Add AWS WAF
 -   Enable ALB access logs
 -   Add CloudFront in front of ALB
--   Add Database tier
+-   Introduce blue/green weighted routing
 -   Enable detailed CloudWatch monitoring

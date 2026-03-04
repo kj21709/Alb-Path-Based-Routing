@@ -14,10 +14,8 @@ Parameters:
     Type: String
   CertificateArn:
     Type: String
-    Default: arn:aws:acm:us-east-1:843553758024:certificate/8c470956-6728-4f7e-bc59-fa1072d6f925
   HostedZoneId:
     Type: String
-    Default: Z00414272K7YBCYJ3PEG4
   RecordName:
     Type: String
     Default: arr.homenub.com
@@ -85,6 +83,9 @@ Resources:
         InstanceProfileName: !GetAtt IAMStack.Outputs.InstanceProfileName
         RedTargetGroupArn: !GetAtt ALBStack.Outputs.RedTargetGroupArn
         BlueTargetGroupArn: !GetAtt ALBStack.Outputs.BlueTargetGroupArn
+        ALBFullName: !GetAtt ALBStack.Outputs.ALBFullName
+        RedTargetGroupFullName: !GetAtt ALBStack.Outputs.RedTargetGroupFullName
+        BlueTargetGroupFullName: !GetAtt ALBStack.Outputs.BlueTargetGroupFullName
         BucketName: !Ref BucketName
 
 Outputs:
