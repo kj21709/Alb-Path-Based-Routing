@@ -251,7 +251,7 @@ Resources:
         WaitOnResourceSignals: true
     Properties:
       MinSize: '1'
-      MaxSize: '2'
+      MaxSize: '3
       DesiredCapacity: '1'
       VPCZoneIdentifier:
         - !Ref PrivateSubnetA
@@ -278,7 +278,7 @@ Resources:
         WaitOnResourceSignals: true
     Properties:
       MinSize: '1'
-      MaxSize: '2'
+      MaxSize: '3'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
         - !Ref PrivateSubnetA

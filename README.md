@@ -1,20 +1,26 @@
 # Advanced Request Routing with ALB (Host & Path Based) + Auto Scaling
 
-This project demonstrates the deployment and hosting of a static website on S3, leveraging various resources on AWS to implement security, high availability and scalability. 
+This project demonstrates a production style AWS architecture that implements advanced request routing using an Application Load Balancer (ALB). The environment is deployed using AWS CloudFormation Infrastructure as Code (IaC) and showcases how to design a scalable, highly available web architecture on AWS.
+
+The solution uses host-based routing to support multiple domains behind a single load balancer. Incoming requests are evaluated using the HTTP host header, allowing the ALB to route traffic to different target groups and EC2 Auto Scaling Groups depending on the requested domain.
+
+In addition to host routing, the architecture implements path-based routing (URL-based routing). ALB listener rules inspect the request path and forward traffic to the appropriate backend service based on defined routing patterns. This enables multiple applications or services to share a single load balancer entry point while maintaining clear traffic segmentation.
+
+To demonstrate scalable infrastructure design, the project integrates EC2 Auto Scaling Groups with target tracking policies that scale compute resources dynamically based on the ALBRequestCountPerTarget metric. This ensures the environment can automatically adjust capacity in response to traffic demand.
+
+The architecture also includes static website hosting on Amazon S3, which is integrated with other AWS services to deliver a secure, highly available web solution.
 
 ## Overview
 
-The following resources are used to setup this environment:
--   Virtual Private Cloud
--   Application Load Balancer (ALB)
--   Host based routing
--   Path based routing
--   Auto Scaling with Target Tracking policies
--   Route 53 DNS integration
--   ACM managed HTTPS
--   Private subnets for compute
--   Multi-AZ deployment
--   Infrastructure as Code using CloudFormation (nested stacks)
+Key AWS services used in this project include:
+-   Virtual Private Cloud (VPC) for deploying resources in a private network environment
+-   AWS Application Load Balancer (ALB) for intelligent traffic routing
+-   Amazon EC2 Auto Scaling for dynamic horizontal scaling
+-   Amazon Route 53 DNS integration for DNS management and domain routing
+-   AWS Certificate Manager (ACM) for HTTPS/TLS certificate management
+-   Amazon S3 for static website hosting and content storage
+-   Multi-AZ networking architecture for high availability
+-   AWS CloudFormation for automated infrastructure deployment
 
 ![Architecture Diagram](images/Path%20Based%20Routing%20Diagram.png)
 ------------------------------------------------------------------------
@@ -29,21 +35,28 @@ Each Auto Scaling Group uses:
 -   Min: 1
 -   Max: 3
 
-Sustained load was generated to trigger scaling events.
+To trigger Auto Scaling events, a simple load test was performed against the Red endpoint. The command below generated repeated HTTPS requests to the Application Load Balancer, increasing the ALBRequestCountPerTarget metric used by the scaling policy.
+
+</> Bash
 
 for i in {1..1000}; do
   curl -sk -o /dev/null -w "%{http_code}\n" https://red.homenub.com/red/index.html
+done
 
 ### Scaling Activity Evidence
 
-![ASG Activity](images/ASG%20activity%20history.png)
+This sustained request volume triggered CloudWatch alarms and caused the Auto Scaling Group to scale out automatically.
 
-CloudWatch alarm transitioned to ALARM state and desired capacity
-increased from 1 to 3 instances automatically.
+![ASG Activity](images/ASG%20activity%20history.png)
 
 ------------------------------------------------------------------------
 
 ## Host-Based Routing Validation
+
+Traffic routed correctly based on host headers:
+
+-   https://red.homenub.com → Red Target Group
+-   https://blue.homenub.com → Blue Target Group
 
 ### Red Environment
 
@@ -53,27 +66,25 @@ increased from 1 to 3 instances automatically.
 
 ![Blue Host](images/host%20based%20blue.png)
 
-Traffic routed correctly based on host headers:
-
--   https://red.homenub.com → Red Target Group
--   https://blue.homenub.com → Blue Target Group
-
 ------------------------------------------------------------------------
 
 ## Path-Based Routing Validation
-
-### Red Path
-
-![Red Path](images/path%20based%20red.png)
-
-### Listener Rules
-
-![Listener Rules](images/listener-rules.png)
 
 Routing rules:
 
 -   /red\* → Red Target Group
 -   /blue\* → Blue Target Group
+
+### Red Path
+
+![Red Path](images/path%20based%20red.png)
+
+### Blue Path
+
+![Blue Path](images/path%20based%20blue.png)
+
+# ![Listener Rules](images/listener-rules.png)
+
 
 ------------------------------------------------------------------------
 
@@ -84,21 +95,31 @@ Routing rules:
 ![Network Path](images/LB%20network%20path.png)
 
 Traffic is distributed across multiple Availability Zones with private
-EC2 instances behind the ALB.
+EC2 instances deployed behind the Application Load Balancer.
 
 ------------------------------------------------------------------------
-
-## Architecture Diagram
-
-![Architecture Diagram](images/Path%20Based%20Routing%20Diagram.png)
+## Architecture Highlights
 
 This environment demonstrates:
 
 -   Secure multi-AZ architecture
 -   HTTPS termination using ACM
 -   Route 53 DNS integration
--   Dynamic scaling based on real traffic
+-   Dynamic scaling based on real traffic metrics
 -   Modular nested CloudFormation stacks
+
+------------------------------------------------------------------------
+
+## Technical Skills Demonstrated
+
+- AWS Cloud Architecture: Designing a highly available, multi-AZ load balanced environment
+- Application Load Balancer (ALB): Implementing host-based and path-based routing
+- Auto Scaling: Configuring target tracking policies using ALBRequestCountPerTarget
+- Infrastructure as Code: Deploying modular infrastructure using AWS CloudFormation nested stacks
+- AWS Networking: VPC design, public/private subnets, and security group configuration
+- DNS & TLS Management: Route 53 domain routing and HTTPS using AWS Certificate Manager (ACM)
+- Scalability Testing: Generating load to validate Auto Scaling behavior and CloudWatch metrics
+- DevOps Tooling: Using AWS CLI for infrastructure deployment, validation, and troubleshooting
 
 ------------------------------------------------------------------------
 
@@ -106,17 +127,15 @@ This environment demonstrates:
 
 1.  Target tracking requires sustained load, not burst traffic.
 2.  Listener rule priority directly impacts routing behavior.
-3.  Instance warmup prevents scaling instability.
-4.  Nested stacks improve modularity but require careful parameter
-    management.
+3.  Instance warmup settings help prevent scaling instability.
+4.  Nested CloudFormation stacks improve re-usability and scalability but require careful parameter management
 5.  Always validate CloudFormation templates before deployment.
 
 ------------------------------------------------------------------------
 
 ## Production Enhancements (Future Improvements)
 
--   Add AWS WAF
--   Enable ALB access logs
--   Add CloudFront in front of ALB
--   Add Database tier
--   Enable detailed CloudWatch monitoring
+-   Add AWS WAF for enhanced security
+-   Enable ALB access logs for monitoring and analysis
+-   Add CloudFront in front of ALB for edge caching and improved performance
+-   Add a database tier (e.g Amazon RDS) to support dynamic application workloads
