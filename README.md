@@ -1,4 +1,4 @@
-# Advanced Request Routing with ALB (Host & Path Based) + Auto Scaling
+# Application Load Balancer Advanced Request Routing
 
 This project demonstrates a production style AWS architecture that implements advanced request routing using an Application Load Balancer (ALB). This environment was deployed using AWS CloudFormation and showcase a design that follow AWS Well-Architected Framework and prescriptive guidances. 
 
@@ -23,7 +23,6 @@ Key AWS services I used in this project include:
 -   AWS CloudFormation for automated infrastructure deployment
 
 [![Architecture Diagram](images/Path%20Based%20Routing%20Diagram.png)](#)
-------------------------------------------------------------------------
 
 ## Auto Scaling Validation
 
@@ -48,7 +47,6 @@ This sustained request volume triggered CloudWatch alarms and caused the Auto Sc
 
 [![ASG Activity](images/ASG%20activity%20history.png)](#)
 
-------------------------------------------------------------------------
 
 ## Host-Based Routing Validation
 
@@ -65,7 +63,6 @@ Traffic routed correctly based on host headers:
 
 [![Blue Host](images/host%20based%20blue.png)](#)
 
-------------------------------------------------------------------------
 
 ## Path-Based Routing Validation
 
@@ -87,7 +84,6 @@ Routing rules:
 [![Listener Rules](images/listener-rules.png)](#)
 
 
-------------------------------------------------------------------------
 
 ## Target Groups & Load Balancer
 
@@ -98,7 +94,7 @@ Routing rules:
 Traffic is distributed across multiple Availability Zones with private
 EC2 instances deployed behind the Application Load Balancer.
 
-------------------------------------------------------------------------
+
 ## Architecture Highlights
 
 This environment demonstrates:
@@ -110,7 +106,6 @@ This environment demonstrates:
 -   Modular nested CloudFormation stacks
 
 
-------------------------------------------------------------------------
 
 ## Lessons I Learned
 
@@ -120,7 +115,7 @@ This environment demonstrates:
 4.  Nested CloudFormation stacks improve re-usability and scalability but require careful parameter management
 5.  Always validate CloudFormation templates before deployment.
 
-------------------------------------------------------------------------
+
 
 ## Production Enhancements I would like to make
 
