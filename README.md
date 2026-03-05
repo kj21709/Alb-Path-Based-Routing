@@ -41,7 +41,6 @@ for i in {1..1000}; do
   curl -sk -o /dev/null -w "%{http_code}\n" https://red.homenub.com/red/index.html
 done
 
-### Scaling Activity Evidence
 
 This sustained request volume triggered CloudWatch alarms and caused the Auto Scaling Group to scale out automatically.
 
