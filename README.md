@@ -1,6 +1,6 @@
 # Advanced Request Routing with ALB (Host & Path Based) + Auto Scaling
 
-This project demonstrates a production style AWS architecture that implements advanced request routing using an Application Load Balancer (ALB). The environment is deployed using AWS CloudFormation Infrastructure as Code (IaC) and showcases how to design a scalable, highly available web architecture on AWS.
+This project demonstrates a production style AWS architecture that implements advanced request routing using an Application Load Balancer (ALB). This environment was deployed using AWS CloudFormation and showcase a design that follow AWS Well-Architected Framework and prescriptive guidances. 
 
 The solution uses host-based routing to support multiple domains behind a single load balancer. Incoming requests are evaluated using the HTTP host header, allowing the ALB to route traffic to different target groups and EC2 Auto Scaling Groups depending on the requested domain.
 
@@ -8,11 +8,11 @@ In addition to host routing, the architecture implements path-based routing (URL
 
 To demonstrate scalable infrastructure design, the project integrates EC2 Auto Scaling Groups with target tracking policies that scale compute resources dynamically based on the ALBRequestCountPerTarget metric. This ensures the environment can automatically adjust capacity in response to traffic demand.
 
-The architecture also includes static website hosting on Amazon S3, which is integrated with other AWS services to deliver a secure, highly available web solution.
+Using the AWS Well-Architected Framework as my guide, I chose to host the static website for this project on S3 and integrated it with the other AWS services mentioned below to build a secure, scalable, and highly available solution.
 
 ## Overview
 
-Key AWS services used in this project include:
+Key AWS services I used in this project include:
 -   Virtual Private Cloud (VPC) for deploying resources in a private network environment
 -   AWS Application Load Balancer (ALB) for intelligent traffic routing
 -   Amazon EC2 Auto Scaling for dynamic horizontal scaling
@@ -22,7 +22,7 @@ Key AWS services used in this project include:
 -   Multi-AZ networking architecture for high availability
 -   AWS CloudFormation for automated infrastructure deployment
 
-![Architecture Diagram](images/Path%20Based%20Routing%20Diagram.png)
+[![Architecture Diagram](images/Path%20Based%20Routing%20Diagram.png)](#)
 ------------------------------------------------------------------------
 
 ## Auto Scaling Validation
@@ -35,9 +35,8 @@ Each Auto Scaling Group uses:
 -   Min: 1
 -   Max: 3
 
-To trigger Auto Scaling events, a simple load test was performed against the Red endpoint. The command below generated repeated HTTPS requests to the Application Load Balancer, increasing the ALBRequestCountPerTarget metric used by the scaling policy.
+To trigger Auto Scaling events, I had to perform a load test against the Red endpoint. The command that I used generated repeated HTTPS requests to the Application Load Balancer, increasing the ALBRequestCountPerTarget metric used by the scaling policy.
 
-</> Bash
 
 for i in {1..1000}; do
   curl -sk -o /dev/null -w "%{http_code}\n" https://red.homenub.com/red/index.html
@@ -47,7 +46,7 @@ done
 
 This sustained request volume triggered CloudWatch alarms and caused the Auto Scaling Group to scale out automatically.
 
-![ASG Activity](images/ASG%20activity%20history.png)
+[![ASG Activity](images/ASG%20activity%20history.png)](#)
 
 ------------------------------------------------------------------------
 
@@ -60,11 +59,11 @@ Traffic routed correctly based on host headers:
 
 ### Red Environment
 
-![Red Host](images/host%20based%20red.png)
+[![Red Host](images/host%20based%20red.png)](#)
 
 ### Blue Environment
 
-![Blue Host](images/host%20based%20blue.png)
+[![Blue Host](images/host%20based%20blue.png)](#)
 
 ------------------------------------------------------------------------
 
@@ -77,22 +76,24 @@ Routing rules:
 
 ### Red Path
 
-![Red Path](images/path%20based%20red.png)
+[![Red Path](images/path%20based%20red.png)](#)
 
 ### Blue Path
 
-![Blue Path](images/path%20based%20blue.png)
+[![Blue Path](images/path%20based%20blue.png)](#)
 
-# ![Listener Rules](images/listener-rules.png)
+### Listener Rules 
+
+[![Listener Rules](images/listener-rules.png)](#)
 
 
 ------------------------------------------------------------------------
 
 ## Target Groups & Load Balancer
 
-![Target Groups](images/target-groups.png)
+[![Target Groups](images/target-groups.png)](#)
 
-![Network Path](images/LB%20network%20path.png)
+[![Network Path](images/LB%20network%20path.png)](#)
 
 Traffic is distributed across multiple Availability Zones with private
 EC2 instances deployed behind the Application Load Balancer.
@@ -108,22 +109,10 @@ This environment demonstrates:
 -   Dynamic scaling based on real traffic metrics
 -   Modular nested CloudFormation stacks
 
-------------------------------------------------------------------------
-
-## Technical Skills Demonstrated
-
-- AWS Cloud Architecture: Designing a highly available, multi-AZ load balanced environment
-- Application Load Balancer (ALB): Implementing host-based and path-based routing
-- Auto Scaling: Configuring target tracking policies using ALBRequestCountPerTarget
-- Infrastructure as Code: Deploying modular infrastructure using AWS CloudFormation nested stacks
-- AWS Networking: VPC design, public/private subnets, and security group configuration
-- DNS & TLS Management: Route 53 domain routing and HTTPS using AWS Certificate Manager (ACM)
-- Scalability Testing: Generating load to validate Auto Scaling behavior and CloudWatch metrics
-- DevOps Tooling: Using AWS CLI for infrastructure deployment, validation, and troubleshooting
 
 ------------------------------------------------------------------------
 
-## Lessons Learned
+## Lessons I Learned
 
 1.  Target tracking requires sustained load, not burst traffic.
 2.  Listener rule priority directly impacts routing behavior.
@@ -133,7 +122,7 @@ This environment demonstrates:
 
 ------------------------------------------------------------------------
 
-## Production Enhancements (Future Improvements)
+## Production Enhancements I would like to make
 
 -   Add AWS WAF for enhanced security
 -   Enable ALB access logs for monitoring and analysis
