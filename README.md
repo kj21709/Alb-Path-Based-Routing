@@ -1,4 +1,4 @@
-# Application Load Balancer Advanced Request Routing
+# Highly Available Web Architecture with ALB Advanced Routing
 
 This project demonstrates a production style AWS architecture that implements advanced request routing using an Application Load Balancer (ALB). This environment was deployed using AWS CloudFormation and showcase a design that follow AWS Well-Architected Framework and prescriptive guidances. 
 
