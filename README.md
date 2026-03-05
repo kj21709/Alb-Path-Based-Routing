@@ -88,7 +88,6 @@ Routing rules:
 
 [![Target Groups](images/target-groups.png)](#)
 
-[![Network Path](images/LB%20network%20path.png)](#)
 
 Traffic is distributed across multiple Availability Zones with private
 EC2 instances deployed behind the Application Load Balancer.
